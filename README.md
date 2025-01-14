@@ -1,5 +1,5 @@
-# Image Processing Repository
-Đây là repository GitHub chính thức cho khóa học **Image Processing**.
+# Xử lý ảnh số nhóm 9
+Đây là repository GitHub chính thức cho khóa học **Xử lý ảnh số**.
 
 ## Tại Sao Sử Dụng GitHub?
 GitHub cung cấp một nền tảng tập trung và có tổ chức để quản lý file và code được nộp, giúp quá trình này hiệu quả và đáng tin cậy hơn.

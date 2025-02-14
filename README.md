@@ -1,4 +1,4 @@
-# Xử lý ảnh số nhóm 9
+# Xử lý ảnh số nhóm 2
 Đây là repository GitHub chính thức cho khóa học **Xử lý ảnh số**.
 
 ## Tại Sao Sử Dụng GitHub?

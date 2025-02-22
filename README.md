@@ -30,10 +30,10 @@ pip install -r requirements.txt
 
 ```bash
 # Clone repository có sẵn về máy local
-git clone <repository_url>
+git clone https://github.com/Zicctor/Image_Processing.git
 
 # Stage các thay đổi để chuẩn bị commit
-git add <file_name>  # Hoặc dùng . để stage tất cả thay đổi
+git add <file_name>
 
 # Lưu các thay đổi đã stage kèm message
 git commit -m "Your commit message"

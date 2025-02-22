@@ -1,0 +1,1 @@
+## Lưu ý: Chỉ upload file PDF vì có thể đọc được trực tiếp trên github thay vì file word

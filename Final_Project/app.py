@@ -1,3 +1,7 @@
+# Implement streamlit cho UI của ứng dụng
+# Có các chức năng như: Upload hình ảnh, chọn kích thước kernel, điều chỉnh chiều rộng của ảnh, tải ảnh kết quả
+# chạy bằng streamlit run app.py
+
 import streamlit as st
 import cv2 as cv
 import numpy as np
@@ -46,24 +50,24 @@ def process_image(image, kernel_size=3, max_width=800):
     return image, abs_laplacian
 
 def main():
-    st.title("Image Edge Detection App")
+    st.title("Ứng Dụng Phát Hiện Cạnh Ảnh")
     
     # Add description
     st.write("""
-    This app performs edge detection on uploaded images using the Laplacian operator.
-    Upload an image to see the edge detection result!
+    Ứng dụng này thực hiện phát hiện cạnh trên hình ảnh được tải lên bằng toán tử Laplacian.
+    Tải lên một hình ảnh để xem kết quả phát hiện cạnh!
     """)
     
     # File uploader
     uploaded_file = st.file_uploader(
-        "Choose an image...", 
+        "Chọn một hình ảnh...", 
         type=['png', 'jpg', 'jpeg', 'bmp', 'webp']
     )
     
     # Sidebar controls
-    st.sidebar.header("Settings")
+    st.sidebar.header("Cài Đặt")
     kernel_size = st.sidebar.slider(
-        "Kernel Size (odd numbers only)",
+        "Kích Thước Kernel (chỉ số lẻ)",
         min_value=1,
         max_value=7,
         value=3,
@@ -71,7 +75,7 @@ def main():
     )
     
     max_width = st.sidebar.slider(
-        "Maximum Image Width",
+        "Chiều Rộng Tối Đa Của Ảnh",
         min_value=300,
         max_value=1200,
         value=800,
@@ -94,25 +98,45 @@ def main():
             col1, col2 = st.columns(2)
             
             with col1:
-                st.header("Original Image")
+                st.header("Ảnh Gốc")
                 st.image(original, channels="BGR")
                 
             with col2:
-                st.header("Edge Detection")
+                st.header("Phát Hiện Cạnh")
                 st.image(edges)
-                
-            # Add download button for the processed image
-            buf = io.BytesIO()
-            Image.fromarray(edges).save(buf, format='PNG')
-            st.download_button(
-                label="Download Edge Detection Result",
-                data=buf.getvalue(),
-                file_name="edge_detection.png",
-                mime="image/png"
-            )
+            
+            # Add download section with more prominence
+            st.subheader("Tải Xuống Kết Quả")
+            
+            # Create download buttons in columns for better layout
+            download_col1, download_col2 = st.columns(2)
+            
+            # Download button for edge detection result
+            with download_col1:
+                buf = io.BytesIO()
+                Image.fromarray(edges).save(buf, format='PNG')
+                st.download_button(
+                    label="Tải Xuống Kết Quả Phát Hiện Cạnh",
+                    data=buf.getvalue(),
+                    file_name="edge_detection.png",
+                    mime="image/png"
+                )
+            
+            # Download button for original image
+            with download_col2:
+                original_buf = io.BytesIO()
+                # Convert BGR to RGB for saving
+                original_rgb = cv.cvtColor(original, cv.COLOR_BGR2RGB)
+                Image.fromarray(original_rgb).save(original_buf, format='PNG')
+                st.download_button(
+                    label="Tải Xuống Ảnh Gốc",
+                    data=original_buf.getvalue(),
+                    file_name="original_image.png",
+                    mime="image/png"
+                )
             
         except Exception as e:
-            st.error(f"Error processing image: {str(e)}")
+            st.error(f"Lỗi xử lý hình ảnh: {str(e)}")
             
 if __name__ == "__main__":
     main()

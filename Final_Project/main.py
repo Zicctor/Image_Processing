@@ -1,3 +1,7 @@
+# File này chứa code trên documentation của OpenCV
+# Được copy + chỉnh sửa lại để phù hợp
+# Source: https://docs.opencv.org/3.4/d5/db5/tutorial_laplace_operator.html#:~:text=The%20Laplacian%20operator%20is%20implemented,operator%20to%20perform%20its%20computation.
+
 import sys
 import cv2 as cv
 
@@ -31,7 +35,7 @@ def main(argv):
     # [variables]
     
     # [load]
-    imageName = argv[0] if len(argv) > 0 else '../data/lotus.jpg'
+    imageName = argv[0] if len(argv) > 0 else '../../data/lotus.jpg'
     
     src = cv.imread(cv.samples.findFile(imageName), cv.IMREAD_COLOR) # load an image
     

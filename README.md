@@ -2,8 +2,6 @@
 
 Đây là repository GitHub chính thức cho môn **Xử lý ảnh số**.
 
-![image](https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExOWw1Z2dhMjVtNXJrdmc1ZjZpMnpncDFqbXZmdjNmYmhkM3JwcDU5cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xUOxfg0ESyhKOv4Vva/giphy.gif)
-
 ## Cài đặt môi trường
 
 ### 1. Tạo môi trường ảo (Virtual Environment)

@@ -1,7 +1,3 @@
-# Implement streamlit cho UI của ứng dụng
-# Có các chức năng như: Upload hình ảnh, chọn kích thước kernel, điều chỉnh chiều rộng của ảnh, tải ảnh kết quả
-# chạy bằng streamlit run app.py
-
 import streamlit as st
 import cv2 as cv
 import numpy as np
@@ -24,119 +20,107 @@ def resize_with_aspect_ratio(image, width=None, height=None, inter=cv.INTER_AREA
     
     return cv.resize(image, dim, interpolation=inter)
 
-def process_image(image, kernel_size=3, max_width=800):
-    # Convert PIL Image to OpenCV format
+def apply_laplacian(image, kernel_size):
+    """Xử lý ảnh với toán tử Laplacian"""
+    # Chuyển sang grayscale và áp dụng Laplacian
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    result = cv.convertScaleAbs(cv.Laplacian(gray, cv.CV_16S, ksize=kernel_size))
+    return result
+
+def process_image(image, kernel_size=3, max_width=800, sharpening=False, sharp_strength=1.5):
+    """Tiền xử lý và áp dụng bộ lọc làm nét"""
     image = np.array(image)
-    if len(image.shape) == 3 and image.shape[2] == 4:  # If RGBA
+    if len(image.shape) == 3 and image.shape[2] == 4:
         image = cv.cvtColor(image, cv.COLOR_RGBA2BGR)
-    elif len(image.shape) == 2:  # If grayscale
-        image = cv.cvtColor(image, cv.COLOR_GRAY2BGR)
     
-    # Resize image
     image = resize_with_aspect_ratio(image, width=max_width)
     
-    # Apply Gaussian blur to reduce noise
-    blurred = cv.GaussianBlur(image, (3, 3), 0)
+    # Áp dụng Laplacian
+    laplacian = apply_laplacian(image, kernel_size)
     
-    # Convert to grayscale
-    gray = cv.cvtColor(blurred, cv.COLOR_BGR2GRAY)
+    # Áp dụng Unsharp Masking nếu được chọn
+    if sharpening:
+        image = unsharp_mask(image, sharp_strength)
     
-    # Apply Laplacian edge detection
-    laplacian = cv.Laplacian(gray, cv.CV_16S, ksize=kernel_size)
-    
-    # Convert back to uint8
-    abs_laplacian = cv.convertScaleAbs(laplacian)
-    
-    return image, abs_laplacian
+    return image, laplacian
+
+def unsharp_mask(image, strength=1.5):
+    """Tăng độ sắc nét của ảnh bằng phương pháp Unsharp Masking"""
+    blurred = cv.GaussianBlur(image, (5, 5), 0)
+    sharpened = cv.addWeighted(image, 1 + strength, blurred, -strength, 0)
+    return sharpened
 
 def main():
-    st.title("Ứng Dụng Phát Hiện Cạnh Ảnh")
-    
-    # Add description
+    st.set_page_config(page_title="Phát Hiện Cạnh Ảnh", layout="wide")
+
+    st.title("Ứng Dụng Phát Hiện Cạnh & Làm Nét Ảnh 📸")
+
     st.write("""
-    Ứng dụng này thực hiện phát hiện cạnh trên hình ảnh được tải lên bằng toán tử Laplacian.
-    Tải lên một hình ảnh để xem kết quả phát hiện cạnh!
+    🔹 Ứng dụng này cho phép phát hiện cạnh bằng toán tử Laplacian và tùy chỉnh làm nét ảnh.
+    \n📥 Tải lên ảnh để trải nghiệm!
     """)
+
+    uploaded_file = st.file_uploader("🖼 Chọn một hình ảnh...", type=['png', 'jpg', 'jpeg', 'bmp', 'webp'])
+
+    st.sidebar.header("⚙ Cài Đặt")
+
+    kernel_size = st.sidebar.slider("🔍 Kích Thước Kernel (chỉ số lẻ)", 1, 7, 3, step=2)
+
+    max_width = st.sidebar.slider("📏 Chiều Rộng Tối Đa Của Ảnh", 300, 1200, 800, step=100)
+
+    sharpening = st.sidebar.checkbox("🖌 Bật Unsharp Masking (Làm Nét)", value=False)
     
-    # File uploader
-    uploaded_file = st.file_uploader(
-        "Chọn một hình ảnh...", 
-        type=['png', 'jpg', 'jpeg', 'bmp', 'webp']
-    )
-    
-    # Sidebar controls
-    st.sidebar.header("Cài Đặt")
-    kernel_size = st.sidebar.slider(
-        "Kích Thước Kernel (chỉ số lẻ)",
-        min_value=1,
-        max_value=7,
-        value=3,
-        step=2
-    )
-    
-    max_width = st.sidebar.slider(
-        "Chiều Rộng Tối Đa Của Ảnh",
-        min_value=300,
-        max_value=1200,
-        value=800,
-        step=100
-    )
-    
+    sharp_strength = st.sidebar.slider("🔧 Cường Độ Làm Nét", 0.5, 3.0, 1.5, step=0.1) if sharpening else None
+
     if uploaded_file is not None:
         try:
-            # Read the image
             image = Image.open(uploaded_file)
-            
-            # Process the image
+
             original, edges = process_image(
                 image,
                 kernel_size=kernel_size,
-                max_width=max_width
+                max_width=max_width,
+                sharpening=sharpening,
+                sharp_strength=sharp_strength
             )
-            
-            # Display images side by side
+
             col1, col2 = st.columns(2)
-            
+
             with col1:
-                st.header("Ảnh Gốc")
-                st.image(original, channels="BGR")
-                
+                st.subheader("Ảnh Gốc")
+                st.image(original, channels="BGR", use_container_width=True)
+
             with col2:
-                st.header("Phát Hiện Cạnh")
-                st.image(edges)
-            
-            # Add download section with more prominence
-            st.subheader("Tải Xuống Kết Quả")
-            
-            # Create download buttons in columns for better layout
+                st.subheader("Phát Hiện Cạnh")
+                st.image(edges, use_container_width=True)
+
+            st.subheader("💾 Tải Xuống Kết Quả")
+
             download_col1, download_col2 = st.columns(2)
-            
-            # Download button for edge detection result
+
             with download_col1:
                 buf = io.BytesIO()
                 Image.fromarray(edges).save(buf, format='PNG')
                 st.download_button(
-                    label="Tải Xuống Kết Quả Phát Hiện Cạnh",
+                    label="📥 Tải Ảnh Đã Phát Hiện Cạnh",
                     data=buf.getvalue(),
                     file_name="edge_detection.png",
                     mime="image/png"
                 )
-            
-            # Download button for original image
+
             with download_col2:
                 original_buf = io.BytesIO()
-                # Convert BGR to RGB for saving
                 original_rgb = cv.cvtColor(original, cv.COLOR_BGR2RGB)
                 Image.fromarray(original_rgb).save(original_buf, format='PNG')
                 st.download_button(
-                    label="Tải Xuống Ảnh Gốc",
+                    label="📥 Tải Ảnh Gốc",
                     data=original_buf.getvalue(),
                     file_name="original_image.png",
                     mime="image/png"
                 )
-            
+
         except Exception as e:
-            st.error(f"Lỗi xử lý hình ảnh: {str(e)}")
-            
+            st.error(f"⚠ Lỗi xử lý hình ảnh: {str(e)}")
+
 if __name__ == "__main__":
     main()

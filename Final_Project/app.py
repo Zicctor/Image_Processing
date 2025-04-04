@@ -5,6 +5,7 @@ from PIL import Image
 import io
 
 def resize_with_aspect_ratio(image, width=None, height=None, inter=cv.INTER_AREA):
+    """Thay đổi kích thước ảnh với tỷ lệ khung hình được giữ nguyên"""
     dim = None
     (h, w) = image.shape[:2]
     
@@ -21,10 +22,16 @@ def resize_with_aspect_ratio(image, width=None, height=None, inter=cv.INTER_AREA
     return cv.resize(image, dim, interpolation=inter)
 
 def apply_laplacian(image, kernel_size):
-    """Xử lý ảnh với toán tử Laplacian"""
-    # Chuyển sang grayscale và áp dụng Laplacian
+    """Phát hiện cạnh sử dụng toán tử Laplacian của OpenCV"""
+    # Chuyển sang ảnh xám
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    result = cv.convertScaleAbs(cv.Laplacian(gray, cv.CV_16S, ksize=kernel_size))
+    
+    # Áp dụng toán tử Laplacian sử dụng OpenCV
+    laplacian = cv.Laplacian(gray, cv.CV_16S, ksize=kernel_size)
+    
+    # Chuyển đổi sang ảnh uint8 để hiển thị
+    result = cv.convertScaleAbs(laplacian)
+    
     return result
 
 def process_image(image, kernel_size=3, max_width=800, sharpening=False, sharp_strength=1.5):
@@ -53,24 +60,19 @@ def unsharp_mask(image, strength=1.5):
 def main():
     st.set_page_config(page_title="Phát Hiện Cạnh Ảnh", layout="wide")
 
-    st.title("Ứng Dụng Phát Hiện Cạnh & Làm Nét Ảnh 📸")
-
-    st.write("""
-    🔹 Ứng dụng này cho phép phát hiện cạnh bằng toán tử Laplacian và tùy chỉnh làm nét ảnh.
-    \n📥 Tải lên ảnh để trải nghiệm!
-    """)
+    st.title("Ứng Dụng Phát Hiện Cạnh & Làm Nét Ảnh Bằng Toán Tử Laplace")
 
     uploaded_file = st.file_uploader("🖼 Chọn một hình ảnh...", type=['png', 'jpg', 'jpeg', 'bmp', 'webp'])
 
     st.sidebar.header("⚙ Cài Đặt")
 
-    kernel_size = st.sidebar.slider("🔍 Kích Thước Kernel (chỉ số lẻ)", 1, 7, 3, step=2)
+    kernel_size = st.sidebar.slider("Kích Thước Kernel (chỉ số lẻ)", 1, 7, 3, step=2)
 
-    max_width = st.sidebar.slider("📏 Chiều Rộng Tối Đa Của Ảnh", 300, 1200, 800, step=100)
+    max_width = st.sidebar.slider("Chiều Rộng Tối Đa Của Ảnh", 300, 1200, 800, step=100)
 
-    sharpening = st.sidebar.checkbox("🖌 Bật Unsharp Masking (Làm Nét)", value=False)
+    sharpening = st.sidebar.checkbox("Bật Unsharp Masking (Làm Nét)", value=False)
     
-    sharp_strength = st.sidebar.slider("🔧 Cường Độ Làm Nét", 0.5, 3.0, 1.5, step=0.1) if sharpening else None
+    sharp_strength = st.sidebar.slider("Cường Độ Làm Nét", 0.5, 3.0, 1.5, step=0.1) if sharpening else None
 
     if uploaded_file is not None:
         try:
@@ -93,31 +95,6 @@ def main():
             with col2:
                 st.subheader("Phát Hiện Cạnh")
                 st.image(edges, use_container_width=True)
-
-            st.subheader("💾 Tải Xuống Kết Quả")
-
-            download_col1, download_col2 = st.columns(2)
-
-            with download_col1:
-                buf = io.BytesIO()
-                Image.fromarray(edges).save(buf, format='PNG')
-                st.download_button(
-                    label="📥 Tải Ảnh Đã Phát Hiện Cạnh",
-                    data=buf.getvalue(),
-                    file_name="edge_detection.png",
-                    mime="image/png"
-                )
-
-            with download_col2:
-                original_buf = io.BytesIO()
-                original_rgb = cv.cvtColor(original, cv.COLOR_BGR2RGB)
-                Image.fromarray(original_rgb).save(original_buf, format='PNG')
-                st.download_button(
-                    label="📥 Tải Ảnh Gốc",
-                    data=original_buf.getvalue(),
-                    file_name="original_image.png",
-                    mime="image/png"
-                )
 
         except Exception as e:
             st.error(f"⚠ Lỗi xử lý hình ảnh: {str(e)}")
